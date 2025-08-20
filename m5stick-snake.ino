@@ -3,7 +3,7 @@
 double last_theta = 0;
 double last_phi = 0;
 
-int dir = 3;
+int imuDir = 3;
 
 #define FIELD_WIDTH 130/10
 #define FIELD_HEIGHT 230/10
@@ -32,8 +32,8 @@ void wipeSnake() {
 
 void drawApple() {
   while (apple_x < 0 || apple_y < 0) {
-    apple_x = random(FIELD_WIDTH - 2);
-    apple_y = random(FIELD_HEIGHT - 2);
+    apple_x = random(FIELD_WIDTH - 1);
+    apple_y = random(FIELD_HEIGHT - 1);
     
     for (int i = 0; i < snake_len; ++i) {
       if (snake_x[i] == apple_x && snake_y[i] == apple_y) {
@@ -47,49 +47,58 @@ void drawApple() {
   M5.Lcd.fillCircle(apple_x * 10 + 7, apple_y * 10 + 8, 5, RED);
 }
 
-bool shiftSnake(int head_x, int head_y) {
+bool moveSnake(int head_x, int head_y) {
   for (int i = snake_len - 1; i > 0; --i) {
     snake_x[i] = snake_x[i - 1];
     snake_y[i] = snake_y[i - 1];
     if (snake_x[i] == head_x && snake_y[i] == head_y)
       return false;
   }
-
-  if (snake_x[0] == head_x && snake_y[0] == head_y)
-    return false;
-      
+   
   snake_x[0] = head_x;
   snake_y[0] = head_y;
   
   return true;
 }
 
-void moveSnake(void* pvParameters) {
+int snakeDir() {
+  if (snake_len == 1)
+    return 0;
+    
+  if (snake_x[0] == snake_x[1])
+    return snake_y[0] > snake_y[1] ? 1 : 2;
+  else 
+    return snake_x[0] > snake_x[1] ? 3 : 4;
+}
+
+void runSnake(void* pvParameters) {
   while (1) {
     wipeSnake();
 
     int head_x = snake_x[0];
     int head_y = snake_y[0];
-  
-    if (dir == 1) {
+
+    int dir = snakeDir();
+
+    if ((imuDir == 1 && dir != 2) || (dir == 1 && imuDir == 2)) {
       ++head_y;
       if (head_y >= FIELD_HEIGHT)
         break;
     }
 
-    if (dir == 2) {
+    if ((imuDir == 2 && dir != 1) || (dir == 2 && imuDir == 1)) {
       --head_y;
       if (head_y < 0)
         break;
     }
     
-    if (dir == 3) {
+    if ((imuDir == 3 && dir != 4) || (dir == 3 && imuDir == 4)) {
       ++head_x;
       if (head_x >= FIELD_WIDTH)
         break;
     }
     
-    if (dir == 4) {
+    if ((imuDir == 4 && dir != 3) || (dir == 4 && imuDir == 3)) {
       --head_x;
       if (head_x < 0)
         break;
@@ -100,8 +109,8 @@ void moveSnake(void* pvParameters) {
       apple_x = -1;
       apple_y = -1;
     }
-
-    if (!shiftSnake(head_x, head_y))
+    
+    if (!moveSnake(head_x, head_y))
       break;
 
     drawSnake();
@@ -110,8 +119,6 @@ void moveSnake(void* pvParameters) {
     delay(500);
   }
 
-  M5.Lcd.fillScreen(BLACK);
-  delay(100);
   M5.Lcd.fillScreen(RED);
   delay(100);
   M5.Lcd.fillScreen(BLACK);
@@ -129,7 +136,7 @@ void setup() {
   M5.Imu.Init();
   M5.Lcd.fillScreen(BLACK);
   
-  xTaskCreatePinnedToCore(moveSnake, "move", 4096, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(runSnake, "run", 4096, NULL, 1, NULL, 0);
 }
 
 void loop() {
@@ -153,13 +160,13 @@ void loop() {
   phi   = alpha * phi + (1 - alpha) * last_phi;
 
   if (phi > 20) {
-    dir = 1;
+    imuDir = 1;
   } else if (phi < -20) {
-    dir = 2;
+    imuDir = 2;
   } else if (theta > 20) {
-    dir = 3;
+    imuDir = 3;
   } else if (theta < -20) {
-    dir = 4;
+    imuDir = 4;
   }
 
   last_theta = theta;
