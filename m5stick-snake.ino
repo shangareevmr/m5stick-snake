@@ -8,29 +8,21 @@ int imuDir = 3;
 #define FIELD_WIDTH 130/10
 #define FIELD_HEIGHT 230/10
 
-int snake_x[FIELD_WIDTH*FIELD_HEIGHT] = { 0 };
-int snake_y[FIELD_WIDTH*FIELD_HEIGHT] = { 0 };
-int snake_len = 1;
+int snake_x[FIELD_WIDTH*FIELD_HEIGHT] = { 1, 0 };
+int snake_y[FIELD_WIDTH*FIELD_HEIGHT] = { 0, 0 };
+int snake_len = 2;
 
-int apple_x = FIELD_WIDTH/2;
-int apple_y = FIELD_HEIGHT/2;
+int apple_x = -1;
+int apple_y = -1;
 
-void doDrawSnake(int color) {
+void drawSnake(int color) {
     M5.Lcd.drawCircle(snake_x[0] * 10 + 7, snake_y[0] * 10 + 8, 5, color);
     for (int i = 1; i < snake_len; i++) {
       M5.Lcd.fillCircle(snake_x[i] * 10 + 7, snake_y[i] * 10 + 8, 5, color);
     }
 }
 
-void drawSnake() {
-  doDrawSnake(WHITE);
-}
-
-void wipeSnake() {
-  doDrawSnake(BLACK);
-}
-
-void drawApple() {
+void drawApple(int color) {
   while (apple_x < 0 || apple_y < 0) {
     apple_x = random(FIELD_WIDTH - 1);
     apple_y = random(FIELD_HEIGHT - 1);
@@ -44,7 +36,7 @@ void drawApple() {
     }
   }
   
-  M5.Lcd.fillCircle(apple_x * 10 + 7, apple_y * 10 + 8, 5, RED);
+  M5.Lcd.fillCircle(apple_x * 10 + 7, apple_y * 10 + 8, 5, color);
 }
 
 bool moveSnake(int head_x, int head_y) {
@@ -61,10 +53,7 @@ bool moveSnake(int head_x, int head_y) {
   return true;
 }
 
-int snakeDir() {
-  if (snake_len == 1)
-    return 0;
-    
+int snakeDir() {    
   if (snake_x[0] == snake_x[1])
     return snake_y[0] > snake_y[1] ? 1 : 2;
   else 
@@ -73,7 +62,7 @@ int snakeDir() {
 
 void runSnake(void* pvParameters) {
   while (1) {
-    wipeSnake();
+    drawSnake(BLACK);
 
     int head_x = snake_x[0];
     int head_y = snake_y[0];
@@ -113,8 +102,8 @@ void runSnake(void* pvParameters) {
     if (!moveSnake(head_x, head_y))
       break;
 
-    drawSnake();
-    drawApple();
+    drawSnake(WHITE);
+    drawApple(RED);
 
     delay(500);
   }
