@@ -3,7 +3,7 @@
 double last_theta = 0;
 double last_phi = 0;
 
-int imuDir = 3;
+int imuDir = 0;
 
 #define FIELD_WIDTH 130/10
 #define FIELD_HEIGHT 230/10
@@ -69,25 +69,25 @@ void runSnake(void* pvParameters) {
 
     int dir = snakeDir();
 
-    if ((imuDir == 1 && dir != 2) || (dir == 1 && imuDir == 2)) {
+    if ((imuDir == 1 && dir != 2) || (dir == 1 && imuDir == 2) || (dir == 1 && imuDir == 0)) {
       ++head_y;
       if (head_y >= FIELD_HEIGHT)
         break;
     }
 
-    if ((imuDir == 2 && dir != 1) || (dir == 2 && imuDir == 1)) {
+    if ((imuDir == 2 && dir != 1) || (dir == 2 && imuDir == 1) || (dir == 2 && imuDir == 0)) {
       --head_y;
       if (head_y < 0)
         break;
     }
     
-    if ((imuDir == 3 && dir != 4) || (dir == 3 && imuDir == 4)) {
+    if ((imuDir == 3 && dir != 4) || (dir == 3 && imuDir == 4) || (dir == 3 && imuDir == 0)) {
       ++head_x;
       if (head_x >= FIELD_WIDTH)
         break;
     }
     
-    if ((imuDir == 4 && dir != 3) || (dir == 4 && imuDir == 3)) {
+    if ((imuDir == 4 && dir != 3) || (dir == 4 && imuDir == 3) || (dir == 4 && imuDir == 0)) {
       --head_x;
       if (head_x < 0)
         break;
@@ -156,6 +156,8 @@ void loop() {
     imuDir = 3;
   } else if (theta < -20) {
     imuDir = 4;
+  } else {
+    imuDir = 0;
   }
 
   last_theta = theta;
